@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>15_proxy_method_get</title>
+</head>
+<body>
+
+<script type="application/javascript">
+  // 案例1
+  const person = {
+    name: '张三'
+  }
+  const proxy = new Proxy(person, {
+    get(target, p, receiver) {
+      if (p in target) {
+        return target[p]
+      } else {
+        // ①如果访问目标对象不存在的属性，会抛出一个错误。
+        // ②如果没有这个拦截函数，访问不存在的属性，只会返回undefined。
+        throw new ReferenceError(`Prop Name "${p}" not exists!`)
+      }
+    }
+  })
+  console.log(proxy.name)
+  // proxy.abc
+
+  // 案例2
+  let proto = new Proxy({}, {
+    get(target, p, receiver) {
+      console.log(`GET: ${p}`)
+      return target[p]
+    }
+  })
+  const obj = Object.create(proto) // get方法可以继承。
+  console.log(obj.abc) // 拦截操作定义在Prototype对象上面，所以如果读取obj对象继承的属性时，拦截会生效。
+
+  // 案例3
+  // 使用get拦截，实现数组读取负数的索引
+  function createArray(...elements) {
+    const handler = {
+      get(target, p, receiver) {
+        const index = Number(p)
+        if (index < 0) {
+          p = String(target.length + index)
+        }
+
+        return Reflect.get(target, p, receiver)
+      }
+    }
+    const arr = []
+    arr.push(...elements)
+
+    return new Proxy(arr, handler)
+  }
+  const arr = createArray('a', 'b', 'c')
+  console.log(arr[-2])
+
+  // 案例4
+  // 读取属性的操作（get），转变为执行某个函数，从而实现属性的链式操作
+  const math = function(value) {
+    const funcStack = []
+    const proxy = new Proxy({a: 1}, {
+      get: function(pipeObject, fnName) {
+        console.log(pipeObject, fnName)
+        if (fnName === 'get') {
+          return funcStack.reduce((val, fn) => {
+            return fn(val)
+          }, value)
+        }
+        funcStack.push(window.$[fnName])
+        return proxy
+      }
+    })
+
+    return proxy
+  }
+  // 设置 Proxy 以后，达到了将函数名链式使用的效果
+  var $ = {}
+  $.double = n => n * 2
+  $.pow = n => n * n
+  $.reverseInt = n => n.toString().split("").reverse().join('')
+  console.log(math(3).double.pow.reverseInt.get)
+
+  // 案例5
+  // 利用get拦截，实现一个生成各种 DOM 节点的通用函数dom
+  const dom = new Proxy({}, {
+    get(target, p, receiver) {
+      return function(attrs, ...children) {
+        // 创建节点
+        const el = document.createElement(p)
+        // 附加属性
+        for (const attrKey of Object.keys(attrs)) {
+          el.setAttribute(attrKey, attrs[attrKey])
+        }
+        // 附加孩子节点
+        for (let child of children) {
+          if (typeof child === 'string') {
+            child = document.createTextNode(child)
+          }
+          el.appendChild(child)
+        }
+
+        return el
+      }
+    }
+  })
+
+  const el = dom.div({},
+    '您好，我叫',
+    dom.a({ 'href': 'https://www.baidu.com'}, '萨姆'),
+    '。我喜欢：',
+    dom.ul({},
+      dom.li({}, '游泳'),
+      dom.li({}, '上网'),
+      dom.li({}, '读书'),
+    )
+  )
+  document.body.appendChild(el)
+
+  // 案例6
+  const proxy1 = new Proxy({}, {
+    get(target, p, receiver) {
+      if (p === 'getProxy') {
+        return receiver
+      }
+      return p in target ? target[p] : undefined
+    }
+  })
+  // get方法的第三个参数，它总是指向原始的读操作所在的那个对象，一般情况下就是 Proxy 实例 proxy1
+  console.log(proxy1 === proxy1.getProxy)
+  // d对象本身没有getProxy属性，所以读取d.getProxy的时候，会去d的原型proxy对象找。这时，receiver就指向d，代表原始的读操作所在的那个对象
+  const obj1 = Object.create(proxy1)
+  console.log(obj1 === obj1.getProxy)
+
+  // 案例7
+  // 如果一个属性不可配置（unconfigurable）且不可写（unwritable），则 Proxy 不能修改该属性，否则通过 Proxy 对象访问该属性会报错。
+  // Uncaught TypeError: 'get' on proxy: property 'foo' is a read-only and non-configurable data property
+  // on the proxy target but the proxy did not return its actual value (expected '123' but got 'abc')
+  const target = Object.defineProperties({}, {
+    foo: {
+      value: 123,
+      writable: false,
+      configurable: false
+    }
+  })
+  const handler = {
+    get(target, p) {
+      return 'abc'
+    }
+  }
+  const proxy2 = new Proxy(target, handler)
+  console.log(proxy2.foo) // foo 在target里是不可配置，不可修改，所有返回的foo值也应该是123，否则就会报错；
+</script>
+
+</body>
+</html>

@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>15_proxy_method_set</title>
+</head>
+<body>
+<script type="application/javascript">
+  // 案例1
+  // 假定Person对象有一个age属性，该属性应该是一个不大于 200 的整数，那么可以使用Proxy保证age的属性值符合要求
+  // 利用set方法，还可以数据绑定，即每当对象发生变化时，会自动更新 DOM
+  const validator = {
+    set(target, p, value, receiver) {
+      if (p === 'age') {
+        if (!Number.isInteger(value)) {
+          throw new ReferenceError('年龄必须是整数')
+        }
+        if (value > 120) {
+          throw new ReferenceError('年龄不能超过120岁')
+        }
+      }
+      target[p] = value
+      return true;
+    }
+  }
+  const proxy = new Proxy({}, validator)
+  proxy.age = 100
+  // proxy.age = 'abc' // Uncaught ReferenceError: 年龄必须是整数
+  // proxy.age = '100' // Uncaught ReferenceError: 年龄必须是整数
+  // proxy.age = 200 // Uncaught ReferenceError: 年龄不能超过120岁
+
+  // 案例2
+  // 在对象上面设置内部属性，属性名的第一个字符使用下划线开头，表示这些属性不应该被外部使用。
+  // 结合get和set方法，就可以做到防止这些内部属性被外部读写
+  const proxy1 = new Proxy({}, {
+    get(target, p, receiver) {
+      invariant(p, 'get')
+      return target[p]
+    },
+    set(target, p, value, receiver) {
+      invariant(p, 'set')
+      target[p] = value
+      return true
+    }
+  })
+
+  function invariant(key, action) {
+    if (key[0] === '_') {
+      // throw ReferenceError(`私有变量不能${action}`)
+      throw new Error(`无法${action}私有属性${key}`)
+    }
+  }
+
+  // proxy1._prop // Uncaught Error: 无法get私有属性_prop
+  // proxy1._prop = 100 // Uncaught Error: 无法set私有属性_prop
+
+  // 案例3
+  // set方法第四个参数
+  const proxy2 = new Proxy({}, {
+    // receiver 就是当前正在使用的对象，如下面例子中的proxy2 和 obj
+    set(target, p, value, receiver) {
+      target[p] = receiver
+      return true
+    }
+  })
+  proxy2.foo = 'bar'
+  console.log(proxy2.foo === proxy2)
+  // 设置原型
+  const obj = {}
+  Object.setPrototypeOf(obj, proxy2)
+  obj.foo1 = 'bar1'
+  console.log(obj.foo1 === obj)
+
+  // 案例4
+  // 如果目标对象自身的某个属性不可写，那么set方法将不起作用。
+  const obj1 = {}
+  Object.defineProperty(obj1, 'foo', {
+    value: 'bar',
+    writable: false
+  })
+  const proxy4 = new Proxy(obj1, {
+    set(target, p, value, receiver) {
+      target[p] = value
+      return true
+    }
+  })
+  // Uncaught TypeError: 'set' on proxy:
+  // trap returned truish for property 'foo' which exists in the proxy target
+  // as a non-configurable and non-writable data property with a different value
+  // proxy4.foo = 100
+  console.log(proxy4.foo)
+
+</script>
+<script src="js/common.js" type="application/javascript" ></script>
+</body>
+</html>
