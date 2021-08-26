@@ -27,22 +27,28 @@
   console.log(obj.a)
   // 直接对象操作，无响应式
   obj.c = 133
-  console.log('obj.c=' + obj.c)
+  console.log('obj.c=' + obj.c) // 不会被劫持
+  console.log('proxy.c=' + proxy.c) // 会被劫持
 
   // 实例2
+  // 如果handler没有设置任何拦截，那就等同于直接通向原对象
   const obj1 = {}
-  const handler1 = {} // 如果handler没有设置任何拦截，那就等同于直接通向原对象
+  const handler1 = {}
   const proxy1 = new Proxy(obj1, handler1)
   proxy1.b = 12
   console.log(obj1.b)
 
-  // 实例3
-  const obj2 = { proxy: new Proxy(obj, handler)} // 将 Proxy 对象，设置到object.proxy属性，从而可以在object对象上调用
-  console.log('obj2.c=' + obj2.proxy.c)
+  // 实例3 （×感觉没用）
+  // 将 Proxy 对象，设置到object.proxy属性，从而可以在object对象上调用
+  const obj2 = { proxy: new Proxy(obj, handler)}
+  console.log('obj2.a=' + obj2.a)
+  console.log(obj2)
 
   // 实例4
-  const obj3 = Object.create(proxy) // √ Proxy 实例也可以作为其他对象的原型对象。
-  console.log('obj3.a=' + obj3.a) // proxy对象是obj3对象的原型，obj3对象本身并没有 a 属性，所以根据原型链，会在proxy对象上读取该属性，导致被拦截
+  // √ Proxy 实例也可以作为其他对象的原型对象。
+  // proxy对象是obj3对象的原型，obj3对象本身并没有 a 属性，所以根据原型链，会在proxy对象上读取该属性，导致被拦截
+  const obj3 = Object.create(proxy)
+  console.log('obj3.a=' + obj3.a)
 </script>
 </body>
 </html>

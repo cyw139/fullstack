@@ -6,8 +6,8 @@
 </head>
 <body>
 <script type="application/javascript">
-  // 案例1
-  // 假定Person对象有一个age属性，该属性应该是一个不大于 200 的整数，那么可以使用Proxy保证age的属性值符合要求
+  // 案例1：set作为验证器
+  // 假定Person对象有一个age属性，该属性应该是一个不大于 120 的整数，那么可以使用Proxy保证age的属性值符合要求
   // 利用set方法，还可以数据绑定，即每当对象发生变化时，会自动更新 DOM
   const validator = {
     set(target, p, value, receiver) {
@@ -29,7 +29,7 @@
   // proxy.age = '100' // Uncaught ReferenceError: 年龄必须是整数
   // proxy.age = 200 // Uncaught ReferenceError: 年龄不能超过120岁
 
-  // 案例2
+  // 案例2：set和get上，限制内部对象的使用；
   // 在对象上面设置内部属性，属性名的第一个字符使用下划线开头，表示这些属性不应该被外部使用。
   // 结合get和set方法，就可以做到防止这些内部属性被外部读写
   const proxy1 = new Proxy({}, {
@@ -55,7 +55,7 @@
   // proxy1._prop = 100 // Uncaught Error: 无法set私有属性_prop
 
   // 案例3
-  // set方法第四个参数
+  // set方法第四个参数，就是使用的proxy对象
   const proxy2 = new Proxy({}, {
     // receiver 就是当前正在使用的对象，如下面例子中的proxy2 和 obj
     set(target, p, value, receiver) {

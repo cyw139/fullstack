@@ -42,7 +42,7 @@
       get(target, p, receiver) {
         const index = Number(p)
         if (index < 0) {
-          p = String(target.length + index)
+          p = String(target.length + index % target.length)
         }
 
         return Reflect.get(target, p, receiver)
@@ -53,8 +53,8 @@
 
     return new Proxy(arr, handler)
   }
-  const arr = createArray('a', 'b', 'c')
-  console.log(arr[-2])
+  const arr = createArray('a', 'b', 'c', 'd')
+  console.log(arr[-6])
 
   // 案例4
   // 读取属性的操作（get），转变为执行某个函数，从而实现属性的链式操作
@@ -68,7 +68,7 @@
             return fn(val)
           }, value)
         }
-        funcStack.push(window.$[fnName])
+        fnName in  window.$ && funcStack.push(window.$[fnName])
         return proxy
       }
     })
@@ -129,7 +129,7 @@
   })
   // get方法的第三个参数，它总是指向原始的读操作所在的那个对象，一般情况下就是 Proxy 实例 proxy1
   console.log(proxy1 === proxy1.getProxy)
-  // d对象本身没有getProxy属性，所以读取d.getProxy的时候，会去d的原型proxy对象找。这时，receiver就指向d，代表原始的读操作所在的那个对象
+  // obj1对象本身没有getProxy属性，所以读取obj1.getProxy的时候，会去obj1的原型proxy对象找。这时，receiver就指向d，代表原始的读操作所在的那个对象
   const obj1 = Object.create(proxy1)
   console.log(obj1 === obj1.getProxy)
 
