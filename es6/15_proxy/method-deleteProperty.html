@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>15_proxy_method_deleteProperty</title>
+</head>
+<body>
+<script type="application/javascript">
+  // 案例1
+  // deleteProperty方法用于拦截delete操作，如果这个方法抛出错误或者返回false，当前属性就无法被delete命令删除
+  function invariant(p, action) {
+    if (p[0] === '_') {
+      throw new ReferenceError(`无法${action}内部属性${p}`)
+    }
+  }
+  const handler = {
+    deleteProperty(target, p) {
+      invariant(p, 'delete')
+      delete target[p]
+      return true
+    }
+  }
+  const target = { _prop: 'name' , name: 'sam'}
+  Object.defineProperty(target, 'name', {
+    configurable: false
+  })
+  const proxy = new Proxy(target, handler)
+  // deleteProperty方法拦截了delete操作符，删除第一个字符为下划线的属性会报错
+  // Uncaught ReferenceError: 无法delete内部属性_prop
+  // delete proxy._prop
+
+  // 限制①：目标对象自身的不可配置（configurable）的属性，不能被deleteProperty方法删除，否则报错
+  // Uncaught TypeError: 'deleteProperty' on proxy:
+  // trap returned truish for property 'name' which is non-configurable in the proxy target
+  delete proxy.name
+
+</script>
+</body>
+</html>

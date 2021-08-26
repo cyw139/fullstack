@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>15_proxy_method_construct</title>
+</head>
+<body>
+<script type="application/javascript" >
+  // construct()方法用于拦截new命令
+  // 限制②：由于construct()拦截的是构造函数，所以它的目标对象必须是函数，否则就会报错。
+  // Uncaught TypeError: proxy1 is not a constructor
+  // const target = {}
+  const target = function() {}
+  const proxy1 = new Proxy(target,{
+    /**
+     *
+     * @param target 目标对象
+     * @param argArray 参数数组
+     * @param newTarget 创建的实例对象
+     */
+    construct(target, argArray, newTarget) {
+      // 限制③：construct()方法中的this指向的是handler，而不是实例对象
+      console.log(this)
+      console.log('called: ' + argArray.join(', '))
+      // 限制①：construct()方法返回的必须是一个对象，否则会报错
+      // Uncaught TypeError: 'construct' on proxy: trap returned non-object ('1')
+      // return 1;
+      return { sum: argArray.reduce((val, next) => {
+        return val + next
+        }, 0) }
+    }
+  })
+  // called: 1, 2, 3, 4, 5
+  // 15
+  console.log((new proxy1(1, 2, 3, 4, 5)).sum)
+</script>
+
+</body>
+</html>
