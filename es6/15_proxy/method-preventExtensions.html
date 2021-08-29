@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>15_proxy_method_preventExtensions</title>
+</head>
+<body>
+<script type="application/javascript">
+  // 案例1
+  // preventExtensions()方法拦截Object.preventExtensions()。该方法必须返回一个布尔值，否则会被自动转为布尔值
+  // 限制①：只有目标对象不可扩展时（即Object.isExtensible(proxy)为false），proxy.preventExtensions才能返回true，否则会报错
+  // 解决①：为了防止出现这个问题，通常要在proxy.preventExtensions()方法里面，调用一次Object.preventExtensions()
+  const proxy = new Proxy({}, {
+    preventExtensions(target) {
+      Object.preventExtensions(target)
+      return true
+    }
+  })
+  // Uncaught TypeError: 'preventExtensions' on proxy: trap returned truish but the proxy target is extensible
+  Object.preventExtensions(proxy)
+</script>
+</body>
+</html>

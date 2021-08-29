@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>15_proxy_this</title>
+</head>
+<body>
+<script type="application/javascript" >
+  // 案例1
+  // 虽然 Proxy 可以代理针对目标对象的访问，但它不是目标对象的透明代理，即不做任何拦截的情况下，也无法保证与目标对象的行为一致。
+  // 主要原因就是在 Proxy 代理的情况下，目标对象内部的this关键字会指向 Proxy 代理
+  const target = {
+    m() {
+      console.log(this === proxy)
+    }
+  }
+  const proxy = new Proxy(target, {})
+  target.m()
+  proxy.m()
+
+  // 案例2
+  // 由于this指向的变化，导致 Proxy 无法代理目标对象
+  const _name = new WeakMap()
+  class Person {
+    constructor(name) {
+      _name.set(this, name)
+    }
+    get name() {
+      return _name.get(this)
+    }
+  }
+  const sam = new Person('SamChen')
+  // SamChen
+  console.log(sam.name)
+  const proxy2 = new Proxy(sam, {})
+  // undefined
+  console.log(proxy.name)
+
+  // 案例3
+  // 限制①：有些原生对象的内部属性，只有通过正确的this才能拿到，所以 Proxy 也无法代理这些原生对象的属性
+  const proxy3 = new Proxy(new Date(), {
+    // 解决①：this绑定原始对象
+    get(target, p, receiver) {
+      return target[p].bind(target)
+      // if(p === 'getDate') {
+      //   return target[p].bind(target)
+      // }
+      // return Reflect.get(target, p, receiver)
+    }
+  })
+  // Uncaught TypeError: this is not a Date object.
+  console.log(proxy3.getDate())
+  console.log(proxy3.getFullYear())
+
+  // 案例4
+  // Proxy 拦截函数内部的this，指向的是handler对象
+  const handler = {
+    get(target, p, receiver) {
+      console.log(this === handler)
+      return 'Hello, ' + p;
+    },
+    set(target, p, value, receiver) {
+      console.log(this === handler)
+      target[p] = value
+      return true
+    }
+  }
+  const proxy4 = new Proxy({}, handler)
+  // true
+  // Hello, foo
+  console.log(proxy4.foo)
+  // true
+  proxy4.foo = 1
+</script>
+
+</body>
+</html>

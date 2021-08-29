@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>15_proxy_Proxy.revocable</title>
+</head>
+<body>
+<script type="application/javascript" >
+  // 案例1
+  // Proxy.revocable()方法返回一个可取消的 Proxy 实例。
+  // Proxy.revocable()的一个使用场景是，目标对象不允许直接访问，必须通过代理访问，一旦访问结束，就收回代理权，不允许再次访问
+  const target = {}
+  const handler = {}
+  const { proxy, revoke: proxy_revoke } = Proxy.revocable(target, handler)
+  proxy.foo = 123
+  console.log(proxy.foo)
+  console.log(target.foo)
+  proxy_revoke()
+  // Uncaught TypeError: Cannot perform 'get' on a proxy that has been revoked
+  console.log(target.foo)
+  console.log(proxy.foo)
+</script>
+
+</body>
+</html>

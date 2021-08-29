@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>15_proxy_method_ownKeys</title>
+</head>
+<body>
+<script type="application/javascript">
+  // ownKeys()方法用来【拦截对象自身属性的读取操作】。具体来说，拦截以下操作。
+  // √ Object.getOwnPropertyNames()
+  // √ Object.getOwnPropertySymbols()
+  // √ Object.keys()
+  // √ for...in循环
+
+  // 案例1
+  // 拦截Object.keys()的例子
+  const target = {
+    a: 1,
+    b: 2,
+    c: 3,
+    [Symbol.for('secret')]: 4 // 2、属性名为 Symbol 值
+  }
+  Object.defineProperty(target, 'key', {
+    value: 'static',
+    enumerable: false,
+    writable: true,
+    configurable: true
+  })
+  Object.defineProperty(target, 'enumerableKey', {
+    value: 'static1',
+    enumerable: true,
+    writable: true,
+    configurable: true
+  })
+  Object.defineProperty(target, 'unconfigurable', {
+    value: 10,
+    enumerable: true,
+    writable: true,
+    // 限制③：如果目标对象自身包含不可配置的属性，则该属性必须被ownKeys()方法返回，否则报错。
+    // Uncaught TypeError: 'ownKeys' on proxy: trap result did not include 'unconfigurable'
+    configurable: false
+  })
+  const proxy = new Proxy(target, {
+    ownKeys(target) {
+      return ['a', 'd', Symbol.for('secret'), 'key', 'enumerableKey', 'unconfigurable']
+    }
+  })
+  // ['a']
+  console.log(Object.keys(proxy))
+  // 限制①：使用Object.keys()方法时，有三类属性会被ownKeys()方法自动过滤，不会返回。
+  // 1、目标对象上不存在的属性，如 'd'
+  // 2、属性名为 Symbol 值，如 Symbol.for('secret')
+  // 3、不可遍历（enumerable）的属性 'key'
+
+  // 案例2
+  // 拦截第一个字符为下划线的属性名
+  const symbol1 = Symbol()
+  const proxy1 = new Proxy({
+    _name: 'sam',
+    _alias: 'samChen',
+    name: 'SamBest',
+    [symbol1]: 'symbol sample'
+  }, {
+    ownKeys(target) {
+      return Reflect.ownKeys(target).filter(key => key[0] !== '_')
+    }
+  })
+  // ['name']
+  console.log(Object.keys(proxy1))
+  for (const pkey in proxy1) {
+    // samBest
+    console.log(proxy1[pkey])
+  }
+  // ['name']
+  console.log(Object.getOwnPropertyNames(proxy1))
+  // [Symbol()]
+  console.log(Object.getOwnPropertySymbols(proxy1))
+
+  // 案例3
+  // 限制②：ownKeys()方法返回的数组成员，只能是【字符串】或【Symbol】 值。
+  // 如果有其他类型的值，或者返回的根本不是数组，就会报错
+  const proxy3 = new Proxy({}, {
+    ownKeys(target) {
+      return [
+        // Uncaught TypeError: 123 is not a valid property name
+        // 123,
+
+        // Uncaught TypeError: true is not a valid property name
+        // true,
+
+        // Uncaught TypeError: undefined is not a valid property name
+        // undefined,
+
+        // Uncaught TypeError: null is not a valid property name
+        // null,
+
+        // Uncaught TypeError: #<Object> is not a valid property name
+        // {},
+
+        // Uncaught TypeError: [object Array] is not a valid property name
+        // []
+      ];
+    }
+  })
+  console.log(Object.getOwnPropertyNames(proxy3))
+
+  // 案例4
+  // 限制④：如果目标对象是不可扩展的（non-extensible），
+  // 这时ownKeys()方法返回的数组之中，必须包含原对象的所有属性，且不能包含多余的属性，否则报错
+  const target4 = {
+    a: 1,
+    b: 2,
+    c: 3,
+    d: 4
+  }
+  Object.preventExtensions(target4)
+  const proxy4 = new Proxy(target4, {
+    ownKeys(target) {
+      // Uncaught TypeError: 'ownKeys' on proxy: trap result did not include 'b'
+      return ['a']
+    }
+  })
+  console.log(Object.keys(proxy4))
+</script>
+</body>
+</html>
