@@ -6,14 +6,49 @@
 </head>
 <body>
 <script type="application/javascript">
+  // ①属性
   // prototype.constructor 构造函数
   // prototype.size 成员数量
+
+  // ②方法
   // prototype.add(v) 添加成员，返回set结构
   // prototype.delete(v) 删除成员，返回boolean
   // prototype.has(v) 成员是否存在，返回boolean
   // prototype.clear() 清除所有成员，无返回值
 
+  // ③遍历：Set的遍历顺序就是插入顺序
+  // prototype.keys()
+  // prototype.values()
+  // prototype.entries()
+  // prototype.forEach()
+
   // 案例1
+  const set = new Set()
+  // 相当于 const arr = [...new Set([1, 2, 2])]
+  set.add(1).add(2).add(2)
+  // 2
+  console.log(set.size)
+  // true
+  console.log(set.has(2))
+  // true
+  console.log(set.has(1))
+  // false
+  console.log(set.has(3))
+  set.delete(2)
+  // false
+  console.log(set.has(2))
+
+  // 案例2
+  // Array.from方法可以将 Set 结构转为数组
+  function dedupe(data) {
+    if (Array.isArray(data)) {
+      return Array.from(new Set(array))
+      // return [...new Set(array)]
+    } else if (typeof data === 'string') {
+      return [...new Set(data)].join('')
+    }
+  }
+
 
 
 
