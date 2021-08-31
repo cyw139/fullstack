@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>14_set_WeakSet</title>
+</head>
+<body>
+<script type="application/javascript">
+  // 案例1
+  // 特性①：【====WeakSet 的成员只能是对象，而不能是其他类型的值====】
+  // WeakSet 是一个构造函数，可以使用new命令，创建 WeakSet 数据结构
+  const ws = new WeakSet()
+  // Uncaught TypeError: Invalid value used in weak set
+  // ws.add(1)
+  // ws.add(Symbol())
+
+  // 作为构造函数，WeakSet 可以接受一个数组或类似数组的对象作为参数。
+  // （实际上，任何具有 Iterable 接口的对象，都可以作为 WeakSet 的参数。）该数组的所有成员，
+  // 都会自动成为 WeakSet 实例对象的成员
+  const ws1 = new WeakSet([
+    [1, 2],
+    [3, 4]
+    // Uncaught TypeError: Invalid value used in weak set
+    // 1
+  ])
+  console.log(ws1)
+  // prototype的三个方法
+  // WeakSet.prototype.add()
+  // WeakSet.prototype.delete()
+  // WeakSet.prototype.has()
+  const obj = {}
+  const foo = {}
+  ws1.add(window)
+  ws1.add(obj)
+  ws1.has(window) // true
+  ws1.has(foo) // false
+  ws1.delete(window)
+  ws1.has(window) //false
+
+  // WeakSet 没有size属性，没有办法遍历它的成员
+
+  // 特性②：【====WeakSet 中的对象都是弱引用====】，即垃圾回收机制不考虑 WeakSet 对该对象的引用，
+  // 也就是说，如果其他对象都不再引用该对象，那么垃圾回收机制会自动回收该对象所占用的内存，
+  // 不考虑该对象还存在于 WeakSet 之中；
+
+  // 这是因为垃圾回收机制根据对象的可达性（reachability）来判断回收，
+  // 如果对象还能被访问到，垃圾回收机制就不会释放这块内存。
+  // 结束使用该值之后，有时会忘记取消引用，导致内存无法释放，进而可能会引发内存泄漏。
+  // WeakSet 里面的引用，都不计入垃圾回收机制，所以就不存在这个问题。
+
+  // 特性②应用：WeakSet 【====适合临时存放一组对象，以及存放跟对象绑定的信息====】。
+  // 只要这些对象在外部消失，它在 WeakSet 里面的引用就会自动消失
+
+  // WeakSet 的成员是不适合引用的，因为它会随时消失。
+  // 另外，由于 WeakSet 内部有多少个成员，取决于垃圾回收机制有没有运行，
+  // 运行前后很可能成员个数是不一样的，而垃圾回收机制何时运行是不可预测的，
+  // 因此 ES6 规定 WeakSet 【====不可遍历====】
+
+  // 案例2
+  // WeakSet 不能遍历，是因为成员都是弱引用，随时可能消失，
+  // 遍历机制无法保证成员的存在，很可能刚刚遍历结束，成员就取不到了。
+  // WeakSet 的一个用处，是储存 DOM 节点，而不用担心这些节点从文档移除时，会引发内存泄漏。
+  const ws2 = new WeakSet()
+  class Foo {
+    constructor() {
+      ws2.add(this)
+    }
+    method(index) {
+      if (!ws2.has(this)) {
+        throw new TypeError(`Foo.prototype.method 只能在Foo实例上调用`)
+      }
+      console.log(`${index}:调用成功`)
+    }
+  }
+  const foo1 = new Foo()
+  foo1.method(1)
+  const proxy = new Proxy(foo1, {
+    construct(target, argArray, newTarget) {
+      return Reflect(...arguments)
+    }
+  })
+  proxy.method(2)
+</script>
+</body>
+</html>
