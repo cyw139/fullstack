@@ -76,6 +76,7 @@
   foo1.method(1)
   const proxy = new Proxy(foo1, {
     construct(target, argArray, newTarget) {
+      console.log('new class')
       return Reflect(...arguments)
     }
   })
