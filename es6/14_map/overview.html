@@ -79,11 +79,10 @@
 
   map3.set(undefined, 3)
   map3.set(null, 4)
-  console.log(map3.get(undefined)) // 3
-
   map3.set(NaN, 123)
-  map3.set(NaN, 456)
-  console.log(map3.get(NaN)) // 456
+  console.log(map3.get(undefined)) // 3
+  console.log(map3.get(null)) // 4
+  console.log(map3.get(NaN)) // 123
 
 </script>
 </body>
