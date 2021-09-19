@@ -1,0 +1,15 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>01_throttle</title>
+  <script src="../src/utils.js" type="application/javascript" ></script>
+</head>
+<body>
+<script type="application/javascript">
+  window.addEventListener('click', throttle(function(e) {
+    console.log(e)
+  }, 3000))
+</script>
+</body>
+</html>
