@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>05_bind</title>
+  <script src="../src/utils.js" type="application/javascript" ></script>
+</head>
+<body>
+<script type="application/javascript">
+  function add(a, b) {
+    console.log(this)
+    console.log(arguments)
+    return a + b + this.c
+  }
+  const obj = {
+    c: 3
+  }
+  c = 13
+
+  // 执行函数
+  let fn1 = bind(add, obj, 1, 2)
+  console.log(fn1())
+
+  let fn2 = bind(add, obj)
+  console.log(fn2(1, 2))
+
+  let fn3 = add.bind(obj, 1, 2)
+  console.log(fn3(3, 4))
+
+  let fn4 = bind(add, obj, 1, 2)
+  console.log(fn4(13, 14))
+</script>
+</body>
+</html>
